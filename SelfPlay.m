@@ -9,11 +9,12 @@
 % rewardValueRatio : (immediate reward * rewardValueRatio) + 
 % (value updated from BoardStates * (1-rewardValueRatio) ) is used as score
 % vaule to feed in the softmax function
-numGame = 3000;
+numGame = 1000;
 discounting = 0.9;
 goRandom = false;
 updateBoardStates = true;
 rewardValueRatio = 0.3;
+inverseTemperature = 0.5;
 
 %% Initialize BoardStates
 if ~exist('BoardStates','var')
@@ -21,7 +22,7 @@ if ~exist('BoardStates','var')
     for i = 1 : 60
         BoardStates{i} = cell(numGame,1);
         for j = 1 : numGame
-            BoardStates{i}{j,1} = zeros(64, 64);
+            BoardStates{i}{j,1} = zeros(8, 8);
             BoardStates{i}{j,2} = 0;
             BoardStates{i}{j,3} = 0;
         end
@@ -30,6 +31,7 @@ end
 
 %% Play Games
 Games = cell(numGame,1);
+winner = zeros(numGame,1);
 for g = 1 : numGame
     if rem(g,100) == 0
         fprintf('Playing... %d\n', g);
@@ -74,6 +76,7 @@ for g = 1 : numGame
                             valueMoves(m) = BoardStates{currentStageNumber}{i,2} / BoardStates{currentStageNumber}{i,3};
                             stateFound = true;
                         end
+                        i = i + 1;
                     end
                 end
               %% Evaluate score
@@ -81,9 +84,9 @@ for g = 1 : numGame
                 scoreMoves = rewardMoves*rewardValueRatio + valueMoves*(1-rewardValueRatio); 
               %% Select Move
                 if B.isPlayer1Turn
-                    [~, selectedMoveIndex] = max(scoreMoves);
+                    selectedMoveIndex = softmaxSel(scoreMoves, inverseTemperature);
                 else
-                    [~, selectedMoveIndex] = min(scoreMoves);
+                    selectedMoveIndex = softmaxSel(scoreMoves * (-1), inverseTemperature);
                 end
             end
           %% Update the board 
@@ -116,5 +119,10 @@ for g = 1 : numGame
                 BoardStates{currentStageNumber}{b,3} = 1;
             end
         end
+    end
+    if sum(sum(B.BoardState))>0
+        winner(g,1) = 1;
+    else
+        winner(g,2) = 2;
     end
 end
