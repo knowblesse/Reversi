@@ -9,7 +9,7 @@
 % rewardValueRatio : (immediate reward * rewardValueRatio) + 
 % (value updated from BoardStates * (1-rewardValueRatio) ) is used as score
 % vaule to feed in the softmax function
-numGame = 1000;
+numGame = 10000;
 discounting = 0.9;
 goRandom = false;
 updateBoardStates = true;
